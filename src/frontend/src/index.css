@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --radius: 0.5rem;
+        /* Warm sand/amber palette for Shanju */
+        --background: 0.98 0.01 45;
+        --foreground: 0.25 0.02 45;
+        --card: 1 0 0;
+        --card-foreground: 0.25 0.02 45;
+        --popover: 1 0 0;
+        --popover-foreground: 0.25 0.02 45;
+        /* Warm amber/gold primary */
+        --primary: 0.65 0.15 55;
+        --primary-foreground: 0.98 0.01 45;
+        /* Warm neutral secondary */
+        --secondary: 0.92 0.02 45;
+        --secondary-foreground: 0.25 0.02 45;
+        --muted: 0.95 0.01 45;
+        --muted-foreground: 0.55 0.02 45;
+        --accent: 0.88 0.08 50;
+        --accent-foreground: 0.25 0.02 45;
+        /* Warm red for destructive */
+        --destructive: 0.55 0.22 25;
+        --destructive-foreground: 0.98 0.01 45;
+        --border: 0.90 0.01 45;
+        --input: 0.90 0.01 45;
+        --ring: 0.65 0.15 55;
+        --chart-1: 0.65 0.15 55;
+        --chart-2: 0.60 0.12 35;
+        --chart-3: 0.70 0.10 70;
+        --chart-4: 0.55 0.18 25;
+        --chart-5: 0.75 0.08 85;
+    }
+
+    .dark {
+        --background: 0.18 0.02 45;
+        --foreground: 0.95 0.01 45;
+        --card: 0.22 0.02 45;
+        --card-foreground: 0.95 0.01 45;
+        --popover: 0.20 0.02 45;
+        --popover-foreground: 0.95 0.01 45;
+        --primary: 0.70 0.15 55;
+        --primary-foreground: 0.15 0.02 45;
+        --secondary: 0.28 0.02 45;
+        --secondary-foreground: 0.95 0.01 45;
+        --muted: 0.28 0.02 45;
+        --muted-foreground: 0.65 0.02 45;
+        --accent: 0.35 0.08 50;
+        --accent-foreground: 0.95 0.01 45;
+        --destructive: 0.60 0.22 25;
+        --destructive-foreground: 0.95 0.01 45;
+        --border: 0.30 0.02 45;
+        --input: 0.30 0.02 45;
+        --ring: 0.70 0.15 55;
+        --chart-1: 0.70 0.15 55;
+        --chart-2: 0.65 0.12 35;
+        --chart-3: 0.75 0.10 70;
+        --chart-4: 0.60 0.18 25;
+        --chart-5: 0.80 0.08 85;
+    }
+
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+}
+
