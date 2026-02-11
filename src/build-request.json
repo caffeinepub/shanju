@@ -1,12 +1,67 @@
 {
   "kind": "build_request",
-  "title": "Untitled request",
+  "title": "Require Password and NID Number in Personal Account profile",
   "priority": "normal",
-  "requirements": [],
-  "constraints": [],
-  "nonGoals": [],
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Update the Personal Account data model to include fields for a user-provided password and a NID (National ID) number, and treat both fields as required when saving a Personal Account.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "recent-user-1"
+        ],
+        "quotes": [
+          "পার্সোনাল একাউন্টে পাসওয়ার্ড রিকুওয়ারেড করুন এন আইডি নাম্বার রিকুওায়ারেড করুন"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend PersonalAccount type includes new fields for password and NID number.",
+        "Backend saveCallerPersonalAccount rejects (traps) if password or NID number is empty/blank.",
+        "Frontend PersonalAccount type used by the Personal Account page includes the new fields so the form can send them."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "In the Personal Account Profile form UI, add inputs for Password and NID Number and enforce client-side validation so both fields are required before allowing the Personal Account profile to be saved. All user-facing text must be in English.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-user-1"
+        ],
+        "quotes": [
+          "পার্সোনাল একাউন্টে পাসওয়ার্ড রিকুওয়ারেড করুন এন আইডি নাম্বার রিকুওায়ারেড করুন"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Personal Account > Profile tab shows a Password input (masked) and a NID Number input.",
+        "Submitting the form with empty Password or empty NID Number shows inline validation errors and prevents submission.",
+        "The existing Tax ID / NID field is updated so NID Number is required (not labeled optional).",
+        "Form default state initializes the new fields to empty strings so validation behaves consistently for new accounts."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor (all logic in backend/main.mo).",
+    "Do not edit frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and anything under frontend/src/components/ui."
+  ],
+  "nonGoals": [
+    "Do not add any third-party authentication system (Internet Identity remains the only auth).",
+    "Do not implement password-based login; this change only makes the Personal Account profile require a password value when saving.",
+    "Do not add external databases or external services for storing/verifying passwords."
+  ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

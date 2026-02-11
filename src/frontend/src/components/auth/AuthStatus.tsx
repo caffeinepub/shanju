@@ -1,6 +1,7 @@
 import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import { useGetCallerUserProfile } from '../../hooks/useUserProfile';
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,12 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, UserCircle } from 'lucide-react';
 
 export default function AuthStatus() {
   const { identity, clear, isLoggingIn } = useInternetIdentity();
   const { data: userProfile } = useGetCallerUserProfile();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const isAuthenticated = !!identity && !identity.getPrincipal().isAnonymous();
 
@@ -26,6 +28,10 @@ export default function AuthStatus() {
   const handleLogout = async () => {
     await clear();
     queryClient.clear();
+  };
+
+  const handlePersonalAccount = () => {
+    navigate({ to: '/personal-account' });
   };
 
   const displayName = userProfile?.name || identity.getPrincipal().toString().slice(0, 8) + '...';
@@ -41,6 +47,11 @@ export default function AuthStatus() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handlePersonalAccount}>
+          <UserCircle className="mr-2 h-4 w-4" />
+          <span>Personal Account</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sign out</span>
@@ -49,4 +60,3 @@ export default function AuthStatus() {
     </DropdownMenu>
   );
 }
-

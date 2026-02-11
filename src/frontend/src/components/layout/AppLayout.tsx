@@ -2,7 +2,7 @@ import { Outlet, useLocation, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import AppHeader from './AppHeader';
-import { Home, Plus, History, Plug } from 'lucide-react';
+import { Home, Plus, History, Plug, User } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 
 export default function AppLayout() {
@@ -11,7 +11,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const isAuthenticated = !!identity && !identity.getPrincipal().isAnonymous();
 
-  const protectedPaths = ['/dashboard', '/create-payment', '/history', '/payment', '/integrations'];
+  const protectedPaths = ['/dashboard', '/create-payment', '/history', '/payment', '/integrations', '/personal-account'];
   const isProtectedRoute = protectedPaths.some((path) => location.pathname.startsWith(path));
 
   useEffect(() => {
@@ -61,6 +61,14 @@ export default function AppLayout() {
                 <Plug className="h-4 w-4" />
                 <span className="hidden sm:inline">Integrations</span>
               </Link>
+              <Link
+                to="/personal-account"
+                className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground [&.active]:bg-accent [&.active]:text-accent-foreground"
+                activeProps={{ className: 'bg-accent text-accent-foreground' }}
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">Personal Account</span>
+              </Link>
             </div>
           </div>
         </nav>
@@ -68,17 +76,21 @@ export default function AppLayout() {
       <main className="flex-1">
         <Outlet />
       </main>
-      <footer className="border-t py-6 md:py-8">
+      <footer className="border-t py-6 bg-card">
         <div className="container text-center text-sm text-muted-foreground">
-          © 2026. Built with ❤️ using{' '}
-          <a
-            href="https://caffeine.ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium underline underline-offset-4 hover:text-foreground"
-          >
-            caffeine.ai
-          </a>
+          <p>
+            © {new Date().getFullYear()} Built with ❤️ using{' '}
+            <a
+              href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(
+                typeof window !== 'undefined' ? window.location.hostname : 'shanju-app'
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground transition-colors"
+            >
+              caffeine.ai
+            </a>
+          </p>
         </div>
       </footer>
     </div>

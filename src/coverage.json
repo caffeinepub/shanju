@@ -1,29 +1,54 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T18:52:48.254Z",
+  "generatedAt": "2026-02-11T20:40:41.700Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 0,
-    "implemented": 0,
-    "items": []
+    "total": 2,
+    "implemented": 2,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Update the Personal Account data model to include fields for a user-provided password and a NID (National ID) number, and treat both fields as required when saving a Personal Account.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/usePersonalAccount.ts",
+          "frontend/src/pages/PersonalAccountPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/usePersonalAccount.ts",
+          "frontend/src/pages/PersonalAccountPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "In the Personal Account Profile form UI, add inputs for Password and NID Number and enforce client-side validation so both fields are required before allowing the Personal Account profile to be saved. All user-facing text must be in English.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/PersonalAccountPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/PersonalAccountPage.tsx"
+        ]
+      }
+    ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
-    "frontend/src/components/payments/CreditCardForm.tsx",
-    "frontend/src/components/payments/PayPalButton.tsx",
-    "frontend/src/components/payments/PaymentDetailsCard.tsx",
-    "frontend/src/components/payments/PaymentMethodSelector.tsx",
-    "frontend/src/components/payments/SimpleCaptcha.tsx",
-    "frontend/src/hooks/usePayments.ts",
-    "frontend/src/pages/PublicPaymentPage.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/usePersonalAccount.ts",
+    "frontend/src/pages/PersonalAccountPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

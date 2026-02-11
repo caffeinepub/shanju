@@ -7,6 +7,96 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export interface FundingRequest {
+    method: {
+        __kind__: "visa";
+        visa: null;
+    } | {
+        __kind__: "mastercard";
+        mastercard: null;
+    } | {
+        __kind__: "bank_account";
+        bank_account: {
+            account_number: string;
+        };
+    };
+    reference?: string;
+    currency: Currency;
+    amount: bigint;
+}
+export type Time = bigint;
+export interface WalletBalance {
+    currency: Currency;
+    amount: bigint;
+}
+export type Currency = {
+    __kind__: "bdt";
+    bdt: null;
+} | {
+    __kind__: "btc";
+    btc: null;
+} | {
+    __kind__: "eth";
+    eth: null;
+} | {
+    __kind__: "usd";
+    usd: null;
+} | {
+    __kind__: "other";
+    other: string;
+} | {
+    __kind__: "usdt";
+    usdt: Variant_op_bnb_etc_eth_star;
+};
+export interface CashOutRequest {
+    destination: string;
+    provider: Variant_upay_payoneer_nagad_bkash_rocket_paypal;
+    reference?: string;
+    currency: Currency;
+    amount: bigint;
+}
+export interface Payment {
+    status: PaymentStatus;
+    description: string;
+    currency: string;
+    payee: Principal;
+    payer: Principal;
+    amount: bigint;
+}
+export type TransactionType = {
+    __kind__: "transfer_out";
+    transfer_out: null;
+} | {
+    __kind__: "deposit";
+    deposit: null;
+} | {
+    __kind__: "transfer_in";
+    transfer_in: null;
+} | {
+    __kind__: "withdrawal";
+    withdrawal: null;
+} | {
+    __kind__: "funding";
+    funding: null;
+} | {
+    __kind__: "cash_out";
+    cash_out: {
+        destination: string;
+        provider: Variant_upay_payoneer_nagad_bkash_rocket_paypal;
+    };
+};
+export interface Transaction {
+    id: bigint;
+    status: TransactionStatus;
+    transactionType: TransactionType;
+    owner: Principal;
+    reference?: string;
+    sender?: Principal;
+    currency: Currency;
+    timestamp: Time;
+    amount: bigint;
+    receiver?: Principal;
+}
 export interface PlatformConnection {
     id: bigint;
     owner: Principal;
@@ -15,12 +105,19 @@ export interface PlatformConnection {
     apiSecret: string;
     platformType: PlatformType;
 }
-export interface Payment {
-    status: PaymentStatus;
-    description: string;
-    currency: string;
-    payee: Principal;
-    payer: Principal;
+export interface PersonalAccount {
+    nid: string;
+    taxId: string;
+    password: string;
+    fullName: string;
+    email: string;
+    address: string;
+    phone: string;
+}
+export interface InternalTransferRequest {
+    recipient: Principal;
+    reference?: string;
+    currency: Currency;
     amount: bigint;
 }
 export interface UserProfile {
@@ -36,50 +133,56 @@ export enum PlatformType {
     otherPlatform = "otherPlatform",
     shopify = "shopify"
 }
+export enum TransactionStatus {
+    pending = "pending",
+    completed = "completed",
+    failed = "failed"
+}
 export enum UserRole {
     admin = "admin",
     user = "user",
     guest = "guest"
 }
+export enum Variant_op_bnb_etc_eth_star {
+    op = "op",
+    bnb = "bnb",
+    etc = "etc",
+    eth = "eth",
+    star = "star"
+}
+export enum Variant_upay_payoneer_nagad_bkash_rocket_paypal {
+    upay = "upay",
+    payoneer = "payoneer",
+    nagad = "nagad",
+    bkash = "bkash",
+    rocket = "rocket",
+    paypal = "paypal"
+}
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     createConnection(name: string, platformType: PlatformType, apiKey: string, apiSecret: string): Promise<bigint>;
-    /**
-     * / Create a new payment request with currency
-     */
     createPayment(payee: Principal, amount: bigint, currency: string, description: string): Promise<bigint>;
     deleteConnection(id: bigint): Promise<void>;
     getCallerConnections(): Promise<Array<PlatformConnection>>;
-    /**
-     * / Get the caller's user profile
-     */
+    getCallerPersonalAccount(): Promise<PersonalAccount | null>;
+    getCallerTransactionHistory(): Promise<Array<Transaction>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getCallerWalletBalance(): Promise<Array<WalletBalance>>;
     getConnection(id: bigint): Promise<PlatformConnection>;
-    /**
-     * / Get payment by id
-     */
     getPayment(id: bigint): Promise<Payment>;
-    /**
-     * / Get a user's profile
-     */
+    getPersonalAccount(user: Principal): Promise<PersonalAccount | null>;
+    getTransactionHistory(user: Principal): Promise<Array<Transaction>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getWalletBalance(user: Principal): Promise<Array<WalletBalance>>;
     isCallerAdmin(): Promise<boolean>;
-    /**
-     * / List all payments
-     */
     listAllPayments(): Promise<Array<Payment>>;
-    /**
-     * / List all payments for a user
-     */
     listPaymentsForUser(user: Principal): Promise<Array<Payment>>;
-    /**
-     * / Save the caller's user profile
-     */
+    processAddMoney(request: FundingRequest): Promise<bigint>;
+    processCashOut(request: CashOutRequest): Promise<bigint>;
+    processInternalTransfer(transfer: InternalTransferRequest): Promise<bigint>;
+    saveCallerPersonalAccount(account: PersonalAccount): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateConnection(id: bigint, name: string, platformType: PlatformType, apiKey: string, apiSecret: string): Promise<void>;
-    /**
-     * / Update the status of a payment
-     */
     updatePaymentStatus(id: bigint, status: PaymentStatus): Promise<void>;
 }

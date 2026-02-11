@@ -1,6 +1,43 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Untitled request",
-  "requirements": []
+  "title": "Require Password and NID Number in Personal Account profile (frontend)",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Ensure the frontend PersonalAccount form state and save payload include password and NID fields as required strings.",
+      "acceptanceCriteria": [
+        "Frontend PersonalAccount type used by the Personal Account page includes the new fields so the form can send them."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/usePersonalAccount.ts",
+          "operation": "modify",
+          "description": "Add a small helper (e.g., a factory/normalizer) that returns a complete PersonalAccount object with required string fields initialized to empty strings (including password and nid), so the Personal Account UI always submits a fully-populated payload."
+        },
+        {
+          "path": "frontend/src/pages/PersonalAccountPage.tsx",
+          "operation": "modify",
+          "description": "Update the form's default state initialization and any data-to-form mapping to ensure password and nid are present as empty strings when missing, and included in the object passed to saveCallerPersonalAccount."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Add Password and NID Number inputs to the Personal Account Profile form and enforce required client-side validation with English-only copy.",
+      "acceptanceCriteria": [
+        "Personal Account > Profile tab shows a Password input (masked) and a NID Number input.",
+        "Submitting the form with empty Password or empty NID Number shows inline validation errors and prevents submission.",
+        "The existing Tax ID / NID field is updated so NID Number is required (not labeled optional).",
+        "Form default state initializes the new fields to empty strings so validation behaves consistently for new accounts."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/PersonalAccountPage.tsx",
+          "operation": "modify",
+          "description": "In the Profile tab form, add new inputs for Password (type=password) and NID Number, update the existing Tax ID / NID field labeling to make NID Number explicitly required (remove 'Optional'), and extend validateForm() to require non-blank password and non-blank nid with inline error messages in English; prevent submission when invalid."
+        }
+      ]
+    }
+  ]
 }

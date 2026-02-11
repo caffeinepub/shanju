@@ -1,101 +1,24 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 9,
-  "summary": "Create a payment provider app named Shanju that lets users make and manage payments.",
-  "architectural_notes": [
-    "Plan for external platform integrations (Shopify, WordPress/WooCommerce, others) via a connector layer with per-platform auth and data sync.",
-    "Plan for multi-currency support (currency codes, formatting, exchange-rate handling/settlement) and global payment rails/region compliance considerations.",
-    "Plan a hosted checkout/payment-link flow with per-link status (active/inactive) and configurable payment methods (card, PayPal).",
-    "Plan bot-protection (CAPTCHA) integration for hosted checkout/payment-link pages (including rate limiting/abuse monitoring)."
-  ],
+  "projectStateVersion": 3,
+  "summary": "New project",
+  "architectural_notes": [],
   "known_issues": [],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-create-the-shanju-app-shell-with-routing-and-core-pages-for-a-payment-provider-workflow-sign-in-dashboard-create-payment-payment-details-and-payment-history",
-      "title": "Create the Shanju app shell with routing and core pages for a payment provider workflow: Sign in, Dashboard, Create Payment, Payment Details, and Payment History.",
+      "id": "feature-update-the-personal-account-data-model-to-include-fields-for-a-user-provided-password-and-a-nid-national-id-number-and-treat-both-fields-as-required-when-saving-a-personal-account",
+      "title": "Update the Personal Account data model to include fields for a user-provided password and a NID (National ID) number, and treat both fields as required when saving a Personal Account.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-internet-identity-sign-in-and-use-the-authenticated-principal-as-the-user-identity-for-all-payment-data-operations",
-      "title": "Add Internet Identity sign-in and use the authenticated principal as the user identity for all payment data operations.",
+      "id": "feature-in-the-personal-account-profile-form-ui-add-inputs-for-password-and-nid-number-and-enforce-client-side-validation-so-both-fields-are-required-before-allowing-the-personal-account-profile-to-be-saved-all-user-facing-text-must-be-in-english",
+      "title": "In the Personal Account Profile form UI, add inputs for Password and NID Number and enforce client-side validation so both fields are required before allowing the Personal Account profile to be saved. All user-facing text must be in English.",
       "reqIds": [
         "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-build-the-frontend-payment-management-ui-that-connects-to-the-backend-create-a-payment-request-form-list-and-filter-payments-by-status-and-a-payment-details-view-with-actions-to-mark-as-paid-or-cancelled",
-      "title": "Build the frontend payment management UI that connects to the backend: create a payment request form, list and filter payments by status, and a payment details view with actions to mark as Paid or Cancelled.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-coherent-distinct-visual-theme-for-shanju-colors-typography-spacing-and-component-styling-and-apply-it-consistently-across-all-pages-avoid-blue-purple-as-primary-brand-colors",
-      "title": "Add a coherent, distinct visual theme for Shanju (colors, typography, spacing, and component styling) and apply it consistently across all pages (avoid blue & purple as primary brand colors).",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-generated-static-brand-logo-asset-for-shanju-and-render-it-in-the-app-header-and-the-sign-in-screen",
-      "title": "Add a generated static brand logo asset for Shanju and render it in the app header and the sign-in screen.",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-frontend-integrations-area-where-signed-in-users-can-manage-connectors-create-a-connector-see-a-list-of-connectors-and-toggle-a-connector-between-active-and-inactive",
-      "title": "Add a frontend \"Integrations\" area where signed-in users can manage connectors: create a connector, see a list of connectors, and toggle a connector between Active and Inactive.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-react-query-hooks-and-frontend-to-backend-integration-for-connector-crud-operations-following-the-existing-patterns-used-for-payments-and-user-profiles",
-      "title": "Add React Query hooks and frontend-to-backend integration for connector CRUD operations, following the existing patterns used for payments and user profiles.",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-frontend-create-payment-form-to-allow-selecting-entering-a-currency-iso-4217-code-and-submit-it-to-the-backend-instead-of-hard-coding-usd",
-      "title": "Update the frontend Create Payment form to allow selecting/entering a currency (ISO 4217 code) and submit it to the backend instead of hard-coding USD.",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-payment-list-and-payment-details-ui-to-display-amounts-using-the-stored-currency-code-or-localized-currency-formatting-instead-of-always-using-and-usd",
-      "title": "Update payment list and payment details UI to display amounts using the stored currency (code or localized currency formatting) instead of always using '$' and USD.",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-frontend-payment-react-query-hooks-and-generated-backend-typings-usage-to-match-the-updated-backend-payment-apis-including-currency-in-create-get-list-flows",
-      "title": "Update the frontend payment React Query hooks and generated backend typings usage to match the updated backend payment APIs (including currency in create/get/list flows).",
-      "reqIds": [
-        "REQ-13"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-an-in-app-explanation-english-clarifying-that-shanju-supports-creating-payment-requests-in-multiple-currencies-worldwide-while-not-performing-real-payment-rail-settlement-or-live-fx-conversion-inside-the-app",
-      "title": "Add an in-app explanation (English) clarifying that Shanju supports creating payment requests in multiple currencies worldwide, while not performing real payment rail settlement or live FX conversion inside the app.",
-      "reqIds": [
-        "REQ-14"
       ],
       "version": 1
     }
@@ -103,67 +26,18 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Build the Shanju payment provider app for making and managing payments",
+      "summary": "Personal Account flow: make Password field required",
       "reqIds": [],
       "status": "pending"
     },
     {
-      "id": "AR-4",
-      "summary": "Implement backend data models and persistence for payments so users can make and manage payments: create a payment request, list payment requests, view a single payment request, and update payment status (e.g., Pending, Paid, Cancelled).",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Add an integration/connector system to connect Shanju with external ecommerce platforms (e.g., Shopify, WordPress/WooCommerce, and other platforms) and enable it for active use.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Add backend support for an ecommerce platform connector system that lets an authenticated user create, view, list, update, and delete their platform connections for Shopify, WordPress/WooCommerce, and a generic \"Other\" platform type.",
-      "reqIds": [
-        "REQ-7"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Support instant worldwide payments with multi-currency acceptance for all user locations.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Extend the backend payment data model and APIs to support multi-currency payment requests by storing an ISO 4217 currency code on each Payment and accepting the currency code when creating a payment.",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Add \"Buy Now\" payment links that users can generate/manage, with an active/inactive toggle for each link.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Add bot protection (e.g., CAPTCHA) to payment link checkout flows.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "Add payment method options on payment links/checkout (enable/disable credit/debit card and PayPal).",
+      "id": "AR-2",
+      "summary": "Personal Account flow: make NID (National ID) number field required",
       "reqIds": [],
       "status": "pending"
     }
   ],
-  "gameProjectType": "none",
-  "projectName": "Shanju",
+  "projectName": "Require Password and NID Number in Personal Account profile",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

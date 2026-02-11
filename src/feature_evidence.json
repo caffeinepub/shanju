@@ -1,4 +1,44 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-update-the-personal-account-data-model-to-include-fields-for-a-user-provided-password-and-a-nid-national-id-number-and-treat-both-fields-as-required-when-saving-a-personal-account",
+      "featureTitle": "Update the Personal Account data model to include fields for a user-provided password and a NID (National ID) number, and treat both fields as required when saving a Personal Account.",
+      "files": [
+        "frontend/src/hooks/usePersonalAccount.ts",
+        "frontend/src/pages/PersonalAccountPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-in-the-personal-account-profile-form-ui-add-inputs-for-password-and-nid-number-and-enforce-client-side-validation-so-both-fields-are-required-before-allowing-the-personal-account-profile-to-be-saved-all-user-facing-text-must-be-in-english",
+      "featureTitle": "In the Personal Account Profile form UI, add inputs for Password and NID Number and enforce client-side validation so both fields are required before allowing the Personal Account profile to be saved. All user-facing text must be in English.",
+      "files": [
+        "frontend/src/pages/PersonalAccountPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

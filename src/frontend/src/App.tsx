@@ -7,6 +7,7 @@ import CreatePaymentPage from './pages/CreatePaymentPage';
 import PaymentDetailsPage from './pages/PaymentDetailsPage';
 import PaymentHistoryPage from './pages/PaymentHistoryPage';
 import IntegrationsPage from './pages/IntegrationsPage';
+import PersonalAccountPage from './pages/PersonalAccountPage';
 import PublicPaymentPage from './pages/PublicPaymentPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { ThemeProvider } from 'next-themes';
@@ -52,6 +53,12 @@ const integrationsRoute = createRoute({
   component: IntegrationsPage,
 });
 
+const personalAccountRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/personal-account',
+  component: PersonalAccountPage,
+});
+
 const publicPaymentRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/pay/$id',
@@ -71,6 +78,7 @@ const routeTree = rootRoute.addChildren([
   paymentDetailsRoute,
   paymentHistoryRoute,
   integrationsRoute,
+  personalAccountRoute,
   publicPaymentRoute,
   notFoundRoute,
 ]);

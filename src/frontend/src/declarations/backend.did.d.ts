@@ -10,6 +10,44 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface CashOutRequest {
+  'destination' : string,
+  'provider' : { 'upay' : null } |
+    { 'payoneer' : null } |
+    { 'nagad' : null } |
+    { 'bkash' : null } |
+    { 'rocket' : null } |
+    { 'paypal' : null },
+  'reference' : [] | [string],
+  'currency' : Currency,
+  'amount' : bigint,
+}
+export type Currency = { 'bdt' : null } |
+  { 'btc' : null } |
+  { 'eth' : null } |
+  { 'usd' : null } |
+  { 'other' : string } |
+  {
+    'usdt' : { 'op' : null } |
+      { 'bnb' : null } |
+      { 'etc' : null } |
+      { 'eth' : null } |
+      { 'star' : null }
+  };
+export interface FundingRequest {
+  'method' : { 'visa' : null } |
+    { 'mastercard' : null } |
+    { 'bank_account' : { 'account_number' : string } },
+  'reference' : [] | [string],
+  'currency' : Currency,
+  'amount' : bigint,
+}
+export interface InternalTransferRequest {
+  'recipient' : Principal,
+  'reference' : [] | [string],
+  'currency' : Currency,
+  'amount' : bigint,
+}
 export interface Payment {
   'status' : PaymentStatus,
   'description' : string,
@@ -21,6 +59,15 @@ export interface Payment {
 export type PaymentStatus = { 'cancelled' : null } |
   { 'pending' : null } |
   { 'completed' : null };
+export interface PersonalAccount {
+  'nid' : string,
+  'taxId' : string,
+  'password' : string,
+  'fullName' : string,
+  'email' : string,
+  'address' : string,
+  'phone' : string,
+}
 export interface PlatformConnection {
   'id' : bigint,
   'owner' : Principal,
@@ -32,10 +79,43 @@ export interface PlatformConnection {
 export type PlatformType = { 'wordpress_woo' : null } |
   { 'otherPlatform' : null } |
   { 'shopify' : null };
+export type Time = bigint;
+export interface Transaction {
+  'id' : bigint,
+  'status' : TransactionStatus,
+  'transactionType' : TransactionType,
+  'owner' : Principal,
+  'reference' : [] | [string],
+  'sender' : [] | [Principal],
+  'currency' : Currency,
+  'timestamp' : Time,
+  'amount' : bigint,
+  'receiver' : [] | [Principal],
+}
+export type TransactionStatus = { 'pending' : null } |
+  { 'completed' : null } |
+  { 'failed' : null };
+export type TransactionType = { 'transfer_out' : null } |
+  { 'deposit' : null } |
+  { 'transfer_in' : null } |
+  { 'withdrawal' : null } |
+  { 'funding' : null } |
+  {
+    'cash_out' : {
+      'destination' : string,
+      'provider' : { 'upay' : null } |
+        { 'payoneer' : null } |
+        { 'nagad' : null } |
+        { 'bkash' : null } |
+        { 'rocket' : null } |
+        { 'paypal' : null },
+    }
+  };
 export interface UserProfile { 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface WalletBalance { 'currency' : Currency, 'amount' : bigint }
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
@@ -43,46 +123,32 @@ export interface _SERVICE {
     [string, PlatformType, string, string],
     bigint
   >,
-  /**
-   * / Create a new payment request with currency
-   */
   'createPayment' : ActorMethod<[Principal, bigint, string, string], bigint>,
   'deleteConnection' : ActorMethod<[bigint], undefined>,
   'getCallerConnections' : ActorMethod<[], Array<PlatformConnection>>,
-  /**
-   * / Get the caller's user profile
-   */
+  'getCallerPersonalAccount' : ActorMethod<[], [] | [PersonalAccount]>,
+  'getCallerTransactionHistory' : ActorMethod<[], Array<Transaction>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCallerWalletBalance' : ActorMethod<[], Array<WalletBalance>>,
   'getConnection' : ActorMethod<[bigint], PlatformConnection>,
-  /**
-   * / Get payment by id
-   */
   'getPayment' : ActorMethod<[bigint], Payment>,
-  /**
-   * / Get a user's profile
-   */
+  'getPersonalAccount' : ActorMethod<[Principal], [] | [PersonalAccount]>,
+  'getTransactionHistory' : ActorMethod<[Principal], Array<Transaction>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getWalletBalance' : ActorMethod<[Principal], Array<WalletBalance>>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  /**
-   * / List all payments
-   */
   'listAllPayments' : ActorMethod<[], Array<Payment>>,
-  /**
-   * / List all payments for a user
-   */
   'listPaymentsForUser' : ActorMethod<[Principal], Array<Payment>>,
-  /**
-   * / Save the caller's user profile
-   */
+  'processAddMoney' : ActorMethod<[FundingRequest], bigint>,
+  'processCashOut' : ActorMethod<[CashOutRequest], bigint>,
+  'processInternalTransfer' : ActorMethod<[InternalTransferRequest], bigint>,
+  'saveCallerPersonalAccount' : ActorMethod<[PersonalAccount], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateConnection' : ActorMethod<
     [bigint, string, PlatformType, string, string],
     undefined
   >,
-  /**
-   * / Update the status of a payment
-   */
   'updatePaymentStatus' : ActorMethod<[bigint, PaymentStatus], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
