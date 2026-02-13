@@ -55,6 +55,9 @@ function getTransactionDetails(tx: Transaction): string {
   if (tx.transactionType.__kind__ === 'transfer_out' && tx.receiver) {
     return `To: ${tx.receiver.toString().slice(0, 8)}...${tx.receiver.toString().slice(-6)}`;
   }
+  if (tx.transactionType.__kind__ === 'funding') {
+    return tx.reference || 'Bank/Card funding';
+  }
   if (tx.transactionType.__kind__ === 'cash_out') {
     const provider = tx.transactionType.cash_out.provider;
     return `Via ${provider.charAt(0).toUpperCase() + provider.slice(1)}`;

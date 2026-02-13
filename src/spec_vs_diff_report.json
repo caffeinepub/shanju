@@ -1,43 +1,33 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T20:40:41.697Z",
-  "summary": "REQ-1 is partially evidenced (backend and frontend types include password and nid; frontend initializes them). REQ-2 is partially evidenced (client-side validation requires password and nid). However, the diff summary does not show backend save validation (trap) nor the actual UI inputs/labels for Password and NID Number, so those parts cannot be confirmed from the provided truncated changes. The diff also introduces a backend migration module that was not requested and may conflict with the stated constraint about keeping all backend logic in backend/main.mo.",
+  "generatedAt": "2026-02-13T03:22:46.826Z",
+  "summary": "REQ-1 and REQ-3 appear implemented (manifest start_url=/admin + /admin shortcut; Install Guide copy updated to mention Add to Home Screen/Install app and that it’s an APK alternative). REQ-2 is only partially met: the service worker adds SPA navigation handling, but it does not fall back to the app shell when navigation fetch returns a non-200 response (e.g., 404), which can still break deep links like /admin, /dashboard, /pay/<id> in standalone mode depending on server behavior.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Backend saveCallerPersonalAccount rejects (traps) if password or NID number is empty/blank.",
-      "reason": "The diff shows the PersonalAccount type updated, but the provided backend/main.mo excerpt is truncated before any saveCallerPersonalAccount implementation/validation is visible. No trapping/blank-check evidence is present in the shown content.",
-      "evidence": [
-        "backend/main.mo (truncated; no saveCallerPersonalAccount shown)"
-      ]
-    },
-    {
       "id": "REQ-2",
-      "requirement": "Personal Account > Profile tab shows a Password input (masked) and a NID Number input, and the existing Tax ID / NID field is updated so NID Number is required (not labeled optional).",
-      "reason": "The provided PersonalAccountPage.tsx is truncated before any JSX for the Profile tab inputs/labels is shown. While validation logic exists for password and nid, the actual presence of a masked password input, a NID Number input, and the updated Tax ID/NID labeling cannot be verified from the truncated diff.",
+      "requirement": "Ensure the service worker supports SPA navigation for installed PWA so deep links like /admin, /dashboard, and /pay/<id> reliably load in standalone mode (serve React app shell instead of non-app HTML errors).",
+      "reason": "The navigation handler only falls back to cached /index.html on network failure (catch). If the network succeeds but returns a non-200 (e.g., 404 for a deep link route when the server isn’t configured for SPA fallback), the service worker returns that error response instead of serving /index.html, so deep links may still fail in standalone mode.",
       "evidence": [
-        "frontend/src/pages/PersonalAccountPage.tsx (truncated; JSX not shown)"
+        "frontend/public/sw.js"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Introduced a backend data migration module and wired it into the main actor via `(with migration = Migration.run)` to add new fields with default empty values.",
-      "reason": "The BuildRequest did not ask for a migration system/module; it only requested adding fields and enforcing required validation on save. This extra migration mechanism is an unrequested feature and may also conflict with the stated constraint to keep all backend logic in backend/main.mo.",
+      "description": "Added an interactive install prompt flow (installable/installed states and an “Install Admin Panel Now” button) using usePwaInstallPrompt, beyond the requested copy-only adjustment for the Install Guide tab.",
+      "reason": "REQ-3 requests adjusting UI copy; it does not request adding new install prompt logic/UI behavior.",
       "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo (imports Migration; uses with-clause migration)"
+        "frontend/src/components/admin/AndroidInstallGuideCard.tsx"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.74,
   "changed_files": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/hooks/usePersonalAccount.ts",
-    "frontend/src/pages/PersonalAccountPage.tsx",
+    "frontend/public/manifest.webmanifest",
+    "frontend/public/sw.js",
+    "frontend/src/components/admin/AndroidInstallGuideCard.tsx",
     "project_state.json"
   ]
 }

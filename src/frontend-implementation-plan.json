@@ -1,41 +1,53 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Require Password and NID Number in Personal Account profile (frontend)",
+  "title": "Admin Panel focused PWA install + SPA-friendly service worker navigation",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Ensure the frontend PersonalAccount form state and save payload include password and NID fields as required strings.",
+      "summary": "Make the installed PWA launch into the Admin Panel and expose an Admin Panel shortcut in the manifest.",
       "acceptanceCriteria": [
-        "Frontend PersonalAccount type used by the Personal Account page includes the new fields so the form can send them."
+        "`frontend/public/manifest.webmanifest` has `start_url` set to `/admin`.",
+        "The manifest includes a shortcut for the `/admin` route (and uses existing app icons where appropriate).",
+        "Installing the app from Android Chrome and launching it opens directly into `/admin` (then follows the existing auth/admin gating behavior)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/usePersonalAccount.ts",
+          "path": "frontend/public/manifest.webmanifest",
           "operation": "modify",
-          "description": "Add a small helper (e.g., a factory/normalizer) that returns a complete PersonalAccount object with required string fields initialized to empty strings (including password and nid), so the Personal Account UI always submits a fully-populated payload."
-        },
-        {
-          "path": "frontend/src/pages/PersonalAccountPage.tsx",
-          "operation": "modify",
-          "description": "Update the form's default state initialization and any data-to-form mapping to ensure password and nid are present as empty strings when missing, and included in the object passed to saveCallerPersonalAccount."
+          "description": "Update the PWA manifest to set `start_url` to `/admin` and add a `shortcuts` entry pointing to `/admin`, reusing existing generated icons already listed in the manifest."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Add Password and NID Number inputs to the Personal Account Profile form and enforce required client-side validation with English-only copy.",
+      "summary": "Update the service worker to handle SPA navigations so deep links load reliably in standalone mode.",
       "acceptanceCriteria": [
-        "Personal Account > Profile tab shows a Password input (masked) and a NID Number input.",
-        "Submitting the form with empty Password or empty NID Number shows inline validation errors and prevents submission.",
-        "The existing Tax ID / NID field is updated so NID Number is required (not labeled optional).",
-        "Form default state initializes the new fields to empty strings so validation behaves consistently for new accounts."
+        "When the app is installed and opened at `/admin`, it loads successfully and renders the React app shell.",
+        "Direct navigation to `/dashboard` and `/pay/<id>` works in standalone mode without returning a non-app HTML error.",
+        "Service worker changes do not break existing caching behavior for static assets and icons."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/PersonalAccountPage.tsx",
+          "path": "frontend/public/sw.js",
           "operation": "modify",
-          "description": "In the Profile tab form, add new inputs for Password (type=password) and NID Number, update the existing Tax ID / NID field labeling to make NID Number explicitly required (remove 'Optional'), and extend validateForm() to require non-blank password and non-blank nid with inline error messages in English; prevent submission when invalid."
+          "description": "Adjust fetch handling to support SPA navigation by serving the cached app shell for same-origin navigation requests (e.g., `/admin`, `/dashboard`, `/pay/<id>`) when the network response is missing/unsuitable, while preserving existing static asset/icon caching behavior."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Revise the Admin Panel Install Guide copy to clearly explain Add to Home Screen as the supported APK alternative (English only).",
+      "acceptanceCriteria": [
+        "Admin Panel > Install Guide tab text is clear, concise, and fully in English.",
+        "Copy mentions “Add to Home Screen/Install app” as the APK-like installation method for Android.",
+        "No new authentication or backend changes are introduced as part of copy updates."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/AndroidInstallGuideCard.tsx",
+          "operation": "modify",
+          "description": "Update user-facing text to be explicitly Admin Panel-focused, clearly instruct Android users to use “Add to Home Screen/Install app” for an app-like install experience, and add a brief note that this is the supported alternative to an APK (English only)."
         }
       ]
     }

@@ -1,67 +1,74 @@
 {
   "kind": "build_request",
-  "title": "Require Password and NID Number in Personal Account profile",
+  "title": "Make the Admin Panel installable as a focused PWA experience (Android Add to Home Screen)",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update the Personal Account data model to include fields for a user-provided password and a NID (National ID) number, and treat both fields as required when saving a Personal Account.",
-      "target": "both",
+      "text": "Update the PWA manifest so installing from the Admin Panel provides an admin-focused install experience: set the manifest `start_url` to `/admin` and add a shortcut entry for the Admin Panel route.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-user-1"
+          "msg-1"
         ],
         "quotes": [
-          "পার্সোনাল একাউন্টে পাসওয়ার্ড রিকুওয়ারেড করুন এন আইডি নাম্বার রিকুওায়ারেড করুন"
+          "হ্যা"
         ]
       },
       "acceptanceCriteria": [
-        "Backend PersonalAccount type includes new fields for password and NID number.",
-        "Backend saveCallerPersonalAccount rejects (traps) if password or NID number is empty/blank.",
-        "Frontend PersonalAccount type used by the Personal Account page includes the new fields so the form can send them."
+        "`frontend/public/manifest.webmanifest` has `start_url` set to `/admin`.",
+        "The manifest includes a shortcut for the `/admin` route (and uses existing app icons where appropriate).",
+        "Installing the app from Android Chrome and launching it opens directly into `/admin` (then follows the existing auth/admin gating behavior)."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "In the Personal Account Profile form UI, add inputs for Password and NID Number and enforce client-side validation so both fields are required before allowing the Personal Account profile to be saved. All user-facing text must be in English.",
+      "text": "Ensure the service worker supports SPA navigation for the installed PWA so deep links like `/admin`, `/dashboard`, and `/pay/<id>` reliably load when opened from the home screen (no blank page / network error due to missing cache or navigation handling).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-user-1"
+          "msg-1"
         ],
         "quotes": [
-          "পার্সোনাল একাউন্টে পাসওয়ার্ড রিকুওয়ারেড করুন এন আইডি নাম্বার রিকুওায়ারেড করুন"
+          "হ্যা"
         ]
       },
       "acceptanceCriteria": [
-        "Personal Account > Profile tab shows a Password input (masked) and a NID Number input.",
-        "Submitting the form with empty Password or empty NID Number shows inline validation errors and prevents submission.",
-        "The existing Tax ID / NID field is updated so NID Number is required (not labeled optional).",
-        "Form default state initializes the new fields to empty strings so validation behaves consistently for new accounts."
+        "When the app is installed and opened at `/admin`, it loads successfully and renders the React app shell.",
+        "Direct navigation to `/dashboard` and `/pay/<id>` works in standalone mode without returning a non-app HTML error.",
+        "Service worker changes do not break existing caching behavior for static assets and icons."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Adjust the Admin Panel install guide UI copy so it explicitly communicates that the Admin Panel can be installed and used app-like via “Add to Home Screen” (English only), and include a brief note that this is the supported alternative to an APK.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "হ্যা"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin Panel > Install Guide tab text is clear, concise, and fully in English.",
+        "Copy mentions “Add to Home Screen/Install app” as the APK-like installation method for Android.",
+        "No new authentication or backend changes are introduced as part of copy updates."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor (all logic in backend/main.mo).",
-    "Do not edit frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and anything under frontend/src/components/ui."
+    "Use English for any user-facing text in the build request deliverables.",
+    "Do not edit any files under `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, or anything in `frontend/src/components/ui`."
   ],
   "nonGoals": [
-    "Do not add any third-party authentication system (Internet Identity remains the only auth).",
-    "Do not implement password-based login; this change only makes the Personal Account profile require a password value when saving.",
-    "Do not add external databases or external services for storing/verifying passwords."
+    "Generating an Android APK or publishing to the Play Store.",
+    "Adding third-party mobile wrappers (Capacitor/Cordova) or native Android code.",
+    "Implementing real-time admin updates or push notifications."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

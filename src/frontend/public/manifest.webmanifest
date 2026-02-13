@@ -1,0 +1,39 @@
+{
+  "name": "Shanju Admin Panel",
+  "short_name": "Shanju Admin",
+  "description": "Admin panel for Shanju payment platform",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#d97706",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/generated/shanju-logo.dim_192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/generated/shanju-logo.dim_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Admin Panel",
+      "short_name": "Admin",
+      "description": "Access the admin panel",
+      "url": "/admin",
+      "icons": [
+        {
+          "src": "/assets/generated/shanju-logo.dim_192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

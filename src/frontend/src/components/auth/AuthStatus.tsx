@@ -1,5 +1,6 @@
 import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import { useGetCallerUserProfile } from '../../hooks/useUserProfile';
+import { useIsAdmin } from '../../hooks/useAdmin';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
@@ -11,11 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut, UserCircle } from 'lucide-react';
+import { User, LogOut, UserCircle, Shield } from 'lucide-react';
 
 export default function AuthStatus() {
   const { identity, clear, isLoggingIn } = useInternetIdentity();
   const { data: userProfile } = useGetCallerUserProfile();
+  const { data: isAdmin, isLoading: isAdminLoading } = useIsAdmin();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -32,6 +34,10 @@ export default function AuthStatus() {
 
   const handlePersonalAccount = () => {
     navigate({ to: '/personal-account' });
+  };
+
+  const handleAdminPanel = () => {
+    navigate({ to: '/admin' });
   };
 
   const displayName = userProfile?.name || identity.getPrincipal().toString().slice(0, 8) + '...';
@@ -51,6 +57,15 @@ export default function AuthStatus() {
           <UserCircle className="mr-2 h-4 w-4" />
           <span>Personal Account</span>
         </DropdownMenuItem>
+        {!isAdminLoading && isAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleAdminPanel}>
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Admin Panel</span>
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />

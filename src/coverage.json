@@ -1,54 +1,58 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T20:40:41.700Z",
+  "generatedAt": "2026-02-13T03:22:46.829Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 3,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Update the Personal Account data model to include fields for a user-provided password and a NID (National ID) number, and treat both fields as required when saving a Personal Account.",
+        "summary": "Update the PWA manifest so installing from the Admin Panel provides an admin-focused install experience: set the manifest `start_url` to `/admin` and add a shortcut entry for the Admin Panel route.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/usePersonalAccount.ts",
-          "frontend/src/pages/PersonalAccountPage.tsx"
+          "frontend/public/manifest.webmanifest"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/usePersonalAccount.ts",
-          "frontend/src/pages/PersonalAccountPage.tsx"
+          "frontend/public/manifest.webmanifest"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "In the Personal Account Profile form UI, add inputs for Password and NID Number and enforce client-side validation so both fields are required before allowing the Personal Account profile to be saved. All user-facing text must be in English.",
+        "summary": "Ensure the service worker supports SPA navigation for the installed PWA so deep links like `/admin`, `/dashboard`, and `/pay/<id>` reliably load when opened from the home screen (no blank page / network error due to missing cache or navigation handling).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/PersonalAccountPage.tsx"
+          "frontend/public/sw.js"
         ],
         "matchedFiles": [
-          "frontend/src/pages/PersonalAccountPage.tsx"
+          "frontend/public/sw.js"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Adjust the Admin Panel install guide UI copy so it explicitly communicates that the Admin Panel can be installed and used app-like via “Add to Home Screen” (English only), and include a brief note that this is the supported alternative to an APK.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/AndroidInstallGuideCard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/AndroidInstallGuideCard.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/usePersonalAccount.ts",
-    "frontend/src/pages/PersonalAccountPage.tsx",
+    "frontend/public/manifest.webmanifest",
+    "frontend/public/sw.js",
+    "frontend/src/components/admin/AndroidInstallGuideCard.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

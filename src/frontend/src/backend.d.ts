@@ -10,14 +10,27 @@ export type Option<T> = Some<T> | None;
 export interface FundingRequest {
     method: {
         __kind__: "visa";
-        visa: null;
+        visa: {
+            cvv: string;
+            card_number: string;
+            card_holder: string;
+            expiry: string;
+        };
     } | {
         __kind__: "mastercard";
-        mastercard: null;
+        mastercard: {
+            cvv: string;
+            card_number: string;
+            card_holder: string;
+            expiry: string;
+        };
     } | {
         __kind__: "bank_account";
         bank_account: {
+            bank_name: string;
             account_number: string;
+            account_holder: string;
+            routing_number: string;
         };
     };
     reference?: string;
@@ -56,6 +69,7 @@ export interface CashOutRequest {
     amount: bigint;
 }
 export interface Payment {
+    id: bigint;
     status: PaymentStatus;
     description: string;
     currency: string;
@@ -104,6 +118,12 @@ export interface PlatformConnection {
     apiKey: string;
     apiSecret: string;
     platformType: PlatformType;
+}
+export interface InternalTransferRequestByPhone {
+    reference?: string;
+    currency: Currency;
+    phoneNumber: string;
+    amount: bigint;
 }
 export interface PersonalAccount {
     nid: string;
@@ -162,6 +182,7 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     createConnection(name: string, platformType: PlatformType, apiKey: string, apiSecret: string): Promise<bigint>;
     createPayment(payee: Principal, amount: bigint, currency: string, description: string): Promise<bigint>;
+    createPaymentByPhone(phoneNumber: string, amount: bigint, currency: string, description: string): Promise<bigint>;
     deleteConnection(id: bigint): Promise<void>;
     getCallerConnections(): Promise<Array<PlatformConnection>>;
     getCallerPersonalAccount(): Promise<PersonalAccount | null>;
@@ -173,16 +194,30 @@ export interface backendInterface {
     getPayment(id: bigint): Promise<Payment>;
     getPersonalAccount(user: Principal): Promise<PersonalAccount | null>;
     getTransactionHistory(user: Principal): Promise<Array<Transaction>>;
+    getUserAccount(user: Principal): Promise<{
+        walletBalances?: Array<WalletBalance>;
+        personalAccount?: PersonalAccount;
+        transactions?: Array<Transaction>;
+        profile?: UserProfile;
+    }>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWalletBalance(user: Principal): Promise<Array<WalletBalance>>;
     isCallerAdmin(): Promise<boolean>;
     listAllPayments(): Promise<Array<Payment>>;
+    listAllUsers(): Promise<Array<{
+        principal: Principal;
+        personalAccount?: PersonalAccount;
+        profile?: UserProfile;
+    }>>;
     listPaymentsForUser(user: Principal): Promise<Array<Payment>>;
-    processAddMoney(request: FundingRequest): Promise<bigint>;
     processCashOut(request: CashOutRequest): Promise<bigint>;
     processInternalTransfer(transfer: InternalTransferRequest): Promise<bigint>;
+    processInternalTransferByPhone(transfer: InternalTransferRequestByPhone): Promise<bigint>;
+    resendAddMoneyOtp(referenceId: bigint): Promise<void>;
     saveCallerPersonalAccount(account: PersonalAccount): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    startAddMoney(request: FundingRequest): Promise<bigint>;
     updateConnection(id: bigint, name: string, platformType: PlatformType, apiKey: string, apiSecret: string): Promise<void>;
     updatePaymentStatus(id: bigint, status: PaymentStatus): Promise<void>;
+    verifyAddMoney(referenceId: bigint, otp: bigint): Promise<bigint>;
 }

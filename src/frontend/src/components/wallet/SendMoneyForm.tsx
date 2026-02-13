@@ -6,30 +6,23 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Loader2 } from 'lucide-react';
-import { useProcessInternalTransfer } from '../../hooks/useWallet';
+import { useProcessInternalTransferByPhone } from '../../hooks/useWallet';
 import { codeToCurrency, amountToSmallestUnit } from '../../utils/walletCurrency';
-import { Principal } from '@dfinity/principal';
 
 export default function SendMoneyForm() {
-  const [recipient, setRecipient] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [reference, setReference] = useState('');
-  const [errors, setErrors] = useState<{ recipient?: string; amount?: string }>({});
+  const [errors, setErrors] = useState<{ phoneNumber?: string; amount?: string }>({});
 
-  const sendMutation = useProcessInternalTransfer();
+  const sendMutation = useProcessInternalTransferByPhone();
 
   const validateForm = (): boolean => {
-    const newErrors: { recipient?: string; amount?: string } = {};
+    const newErrors: { phoneNumber?: string; amount?: string } = {};
 
-    if (!recipient.trim()) {
-      newErrors.recipient = 'Recipient Principal is required';
-    } else {
-      try {
-        Principal.fromText(recipient.trim());
-      } catch {
-        newErrors.recipient = 'Invalid Principal format';
-      }
+    if (!phoneNumber.trim()) {
+      newErrors.phoneNumber = 'Recipient phone number is required';
     }
 
     const amountNum = parseFloat(amount);
@@ -47,19 +40,18 @@ export default function SendMoneyForm() {
     if (!validateForm()) return;
 
     try {
-      const recipientPrincipal = Principal.fromText(recipient.trim());
       const currencyObj = codeToCurrency(currency);
       const amountInSmallestUnit = amountToSmallestUnit(parseFloat(amount), currencyObj);
 
       await sendMutation.mutateAsync({
-        recipient: recipientPrincipal,
+        phoneNumber: phoneNumber.trim(),
         amount: amountInSmallestUnit,
         currency: currencyObj,
         reference: reference.trim() || undefined,
       });
 
       // Reset form
-      setRecipient('');
+      setPhoneNumber('');
       setAmount('');
       setReference('');
       setErrors({});
@@ -75,25 +67,25 @@ export default function SendMoneyForm() {
           <Send className="h-5 w-5" />
           Send Money
         </CardTitle>
-        <CardDescription>Transfer funds to another user</CardDescription>
+        <CardDescription>Transfer funds to another user by phone number</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="recipient">
-              Recipient Principal <span className="text-destructive">*</span>
+            <Label htmlFor="phoneNumber">
+              Recipient Phone Number <span className="text-destructive">*</span>
             </Label>
             <Input
-              id="recipient"
-              value={recipient}
+              id="phoneNumber"
+              value={phoneNumber}
               onChange={(e) => {
-                setRecipient(e.target.value);
-                if (errors.recipient) setErrors({ ...errors, recipient: undefined });
+                setPhoneNumber(e.target.value);
+                if (errors.phoneNumber) setErrors({ ...errors, phoneNumber: undefined });
               }}
-              placeholder="xxxxx-xxxxx-xxxxx-xxxxx-xxx"
-              className={errors.recipient ? 'border-destructive' : ''}
+              placeholder="Enter recipient's phone number"
+              className={errors.phoneNumber ? 'border-destructive' : ''}
             />
-            {errors.recipient && <p className="text-sm text-destructive">{errors.recipient}</p>}
+            {errors.phoneNumber && <p className="text-sm text-destructive">{errors.phoneNumber}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

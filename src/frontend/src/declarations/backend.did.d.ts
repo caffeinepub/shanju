@@ -35,9 +35,30 @@ export type Currency = { 'bdt' : null } |
       { 'star' : null }
   };
 export interface FundingRequest {
-  'method' : { 'visa' : null } |
-    { 'mastercard' : null } |
-    { 'bank_account' : { 'account_number' : string } },
+  'method' : {
+      'visa' : {
+        'cvv' : string,
+        'card_number' : string,
+        'card_holder' : string,
+        'expiry' : string,
+      }
+    } |
+    {
+      'mastercard' : {
+        'cvv' : string,
+        'card_number' : string,
+        'card_holder' : string,
+        'expiry' : string,
+      }
+    } |
+    {
+      'bank_account' : {
+        'bank_name' : string,
+        'account_number' : string,
+        'account_holder' : string,
+        'routing_number' : string,
+      }
+    },
   'reference' : [] | [string],
   'currency' : Currency,
   'amount' : bigint,
@@ -48,7 +69,14 @@ export interface InternalTransferRequest {
   'currency' : Currency,
   'amount' : bigint,
 }
+export interface InternalTransferRequestByPhone {
+  'reference' : [] | [string],
+  'currency' : Currency,
+  'phoneNumber' : string,
+  'amount' : bigint,
+}
 export interface Payment {
+  'id' : bigint,
   'status' : PaymentStatus,
   'description' : string,
   'currency' : string,
@@ -124,6 +152,10 @@ export interface _SERVICE {
     bigint
   >,
   'createPayment' : ActorMethod<[Principal, bigint, string, string], bigint>,
+  'createPaymentByPhone' : ActorMethod<
+    [string, bigint, string, string],
+    bigint
+  >,
   'deleteConnection' : ActorMethod<[bigint], undefined>,
   'getCallerConnections' : ActorMethod<[], Array<PlatformConnection>>,
   'getCallerPersonalAccount' : ActorMethod<[], [] | [PersonalAccount]>,
@@ -135,21 +167,46 @@ export interface _SERVICE {
   'getPayment' : ActorMethod<[bigint], Payment>,
   'getPersonalAccount' : ActorMethod<[Principal], [] | [PersonalAccount]>,
   'getTransactionHistory' : ActorMethod<[Principal], Array<Transaction>>,
+  'getUserAccount' : ActorMethod<
+    [Principal],
+    {
+      'walletBalances' : [] | [Array<WalletBalance>],
+      'personalAccount' : [] | [PersonalAccount],
+      'transactions' : [] | [Array<Transaction>],
+      'profile' : [] | [UserProfile],
+    }
+  >,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getWalletBalance' : ActorMethod<[Principal], Array<WalletBalance>>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'listAllPayments' : ActorMethod<[], Array<Payment>>,
+  'listAllUsers' : ActorMethod<
+    [],
+    Array<
+      {
+        'principal' : Principal,
+        'personalAccount' : [] | [PersonalAccount],
+        'profile' : [] | [UserProfile],
+      }
+    >
+  >,
   'listPaymentsForUser' : ActorMethod<[Principal], Array<Payment>>,
-  'processAddMoney' : ActorMethod<[FundingRequest], bigint>,
   'processCashOut' : ActorMethod<[CashOutRequest], bigint>,
   'processInternalTransfer' : ActorMethod<[InternalTransferRequest], bigint>,
+  'processInternalTransferByPhone' : ActorMethod<
+    [InternalTransferRequestByPhone],
+    bigint
+  >,
+  'resendAddMoneyOtp' : ActorMethod<[bigint], undefined>,
   'saveCallerPersonalAccount' : ActorMethod<[PersonalAccount], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'startAddMoney' : ActorMethod<[FundingRequest], bigint>,
   'updateConnection' : ActorMethod<
     [bigint, string, PlatformType, string, string],
     undefined
   >,
   'updatePaymentStatus' : ActorMethod<[bigint, PaymentStatus], undefined>,
+  'verifyAddMoney' : ActorMethod<[bigint, bigint], bigint>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

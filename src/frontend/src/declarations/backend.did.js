@@ -96,21 +96,12 @@ export const PaymentStatus = IDL.Variant({
   'completed' : IDL.Null,
 });
 export const Payment = IDL.Record({
+  'id' : IDL.Nat,
   'status' : PaymentStatus,
   'description' : IDL.Text,
   'currency' : IDL.Text,
   'payee' : IDL.Principal,
   'payer' : IDL.Principal,
-  'amount' : IDL.Nat,
-});
-export const FundingRequest = IDL.Record({
-  'method' : IDL.Variant({
-    'visa' : IDL.Null,
-    'mastercard' : IDL.Null,
-    'bank_account' : IDL.Record({ 'account_number' : IDL.Text }),
-  }),
-  'reference' : IDL.Opt(IDL.Text),
-  'currency' : Currency,
   'amount' : IDL.Nat,
 });
 export const CashOutRequest = IDL.Record({
@@ -133,6 +124,37 @@ export const InternalTransferRequest = IDL.Record({
   'currency' : Currency,
   'amount' : IDL.Nat,
 });
+export const InternalTransferRequestByPhone = IDL.Record({
+  'reference' : IDL.Opt(IDL.Text),
+  'currency' : Currency,
+  'phoneNumber' : IDL.Text,
+  'amount' : IDL.Nat,
+});
+export const FundingRequest = IDL.Record({
+  'method' : IDL.Variant({
+    'visa' : IDL.Record({
+      'cvv' : IDL.Text,
+      'card_number' : IDL.Text,
+      'card_holder' : IDL.Text,
+      'expiry' : IDL.Text,
+    }),
+    'mastercard' : IDL.Record({
+      'cvv' : IDL.Text,
+      'card_number' : IDL.Text,
+      'card_holder' : IDL.Text,
+      'expiry' : IDL.Text,
+    }),
+    'bank_account' : IDL.Record({
+      'bank_name' : IDL.Text,
+      'account_number' : IDL.Text,
+      'account_holder' : IDL.Text,
+      'routing_number' : IDL.Text,
+    }),
+  }),
+  'reference' : IDL.Opt(IDL.Text),
+  'currency' : Currency,
+  'amount' : IDL.Nat,
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -144,6 +166,11 @@ export const idlService = IDL.Service({
     ),
   'createPayment' : IDL.Func(
       [IDL.Principal, IDL.Nat, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
+  'createPaymentByPhone' : IDL.Func(
+      [IDL.Text, IDL.Nat, IDL.Text, IDL.Text],
       [IDL.Nat],
       [],
     ),
@@ -178,6 +205,18 @@ export const idlService = IDL.Service({
       [IDL.Vec(Transaction)],
       ['query'],
     ),
+  'getUserAccount' : IDL.Func(
+      [IDL.Principal],
+      [
+        IDL.Record({
+          'walletBalances' : IDL.Opt(IDL.Vec(WalletBalance)),
+          'personalAccount' : IDL.Opt(PersonalAccount),
+          'transactions' : IDL.Opt(IDL.Vec(Transaction)),
+          'profile' : IDL.Opt(UserProfile),
+        }),
+      ],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -190,26 +229,46 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'listAllPayments' : IDL.Func([], [IDL.Vec(Payment)], ['query']),
+  'listAllUsers' : IDL.Func(
+      [],
+      [
+        IDL.Vec(
+          IDL.Record({
+            'principal' : IDL.Principal,
+            'personalAccount' : IDL.Opt(PersonalAccount),
+            'profile' : IDL.Opt(UserProfile),
+          })
+        ),
+      ],
+      ['query'],
+    ),
   'listPaymentsForUser' : IDL.Func(
       [IDL.Principal],
       [IDL.Vec(Payment)],
       ['query'],
     ),
-  'processAddMoney' : IDL.Func([FundingRequest], [IDL.Nat], []),
   'processCashOut' : IDL.Func([CashOutRequest], [IDL.Nat], []),
   'processInternalTransfer' : IDL.Func(
       [InternalTransferRequest],
       [IDL.Nat],
       [],
     ),
+  'processInternalTransferByPhone' : IDL.Func(
+      [InternalTransferRequestByPhone],
+      [IDL.Nat],
+      [],
+    ),
+  'resendAddMoneyOtp' : IDL.Func([IDL.Nat], [], []),
   'saveCallerPersonalAccount' : IDL.Func([PersonalAccount], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'startAddMoney' : IDL.Func([FundingRequest], [IDL.Nat], []),
   'updateConnection' : IDL.Func(
       [IDL.Nat, IDL.Text, PlatformType, IDL.Text, IDL.Text],
       [],
       [],
     ),
   'updatePaymentStatus' : IDL.Func([IDL.Nat, PaymentStatus], [], []),
+  'verifyAddMoney' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Nat], []),
 });
 
 export const idlInitArgs = [];
@@ -303,21 +362,12 @@ export const idlFactory = ({ IDL }) => {
     'completed' : IDL.Null,
   });
   const Payment = IDL.Record({
+    'id' : IDL.Nat,
     'status' : PaymentStatus,
     'description' : IDL.Text,
     'currency' : IDL.Text,
     'payee' : IDL.Principal,
     'payer' : IDL.Principal,
-    'amount' : IDL.Nat,
-  });
-  const FundingRequest = IDL.Record({
-    'method' : IDL.Variant({
-      'visa' : IDL.Null,
-      'mastercard' : IDL.Null,
-      'bank_account' : IDL.Record({ 'account_number' : IDL.Text }),
-    }),
-    'reference' : IDL.Opt(IDL.Text),
-    'currency' : Currency,
     'amount' : IDL.Nat,
   });
   const CashOutRequest = IDL.Record({
@@ -340,6 +390,37 @@ export const idlFactory = ({ IDL }) => {
     'currency' : Currency,
     'amount' : IDL.Nat,
   });
+  const InternalTransferRequestByPhone = IDL.Record({
+    'reference' : IDL.Opt(IDL.Text),
+    'currency' : Currency,
+    'phoneNumber' : IDL.Text,
+    'amount' : IDL.Nat,
+  });
+  const FundingRequest = IDL.Record({
+    'method' : IDL.Variant({
+      'visa' : IDL.Record({
+        'cvv' : IDL.Text,
+        'card_number' : IDL.Text,
+        'card_holder' : IDL.Text,
+        'expiry' : IDL.Text,
+      }),
+      'mastercard' : IDL.Record({
+        'cvv' : IDL.Text,
+        'card_number' : IDL.Text,
+        'card_holder' : IDL.Text,
+        'expiry' : IDL.Text,
+      }),
+      'bank_account' : IDL.Record({
+        'bank_name' : IDL.Text,
+        'account_number' : IDL.Text,
+        'account_holder' : IDL.Text,
+        'routing_number' : IDL.Text,
+      }),
+    }),
+    'reference' : IDL.Opt(IDL.Text),
+    'currency' : Currency,
+    'amount' : IDL.Nat,
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -351,6 +432,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'createPayment' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
+    'createPaymentByPhone' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Text, IDL.Text],
         [IDL.Nat],
         [],
       ),
@@ -389,6 +475,18 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Transaction)],
         ['query'],
       ),
+    'getUserAccount' : IDL.Func(
+        [IDL.Principal],
+        [
+          IDL.Record({
+            'walletBalances' : IDL.Opt(IDL.Vec(WalletBalance)),
+            'personalAccount' : IDL.Opt(PersonalAccount),
+            'transactions' : IDL.Opt(IDL.Vec(Transaction)),
+            'profile' : IDL.Opt(UserProfile),
+          }),
+        ],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -401,26 +499,46 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'listAllPayments' : IDL.Func([], [IDL.Vec(Payment)], ['query']),
+    'listAllUsers' : IDL.Func(
+        [],
+        [
+          IDL.Vec(
+            IDL.Record({
+              'principal' : IDL.Principal,
+              'personalAccount' : IDL.Opt(PersonalAccount),
+              'profile' : IDL.Opt(UserProfile),
+            })
+          ),
+        ],
+        ['query'],
+      ),
     'listPaymentsForUser' : IDL.Func(
         [IDL.Principal],
         [IDL.Vec(Payment)],
         ['query'],
       ),
-    'processAddMoney' : IDL.Func([FundingRequest], [IDL.Nat], []),
     'processCashOut' : IDL.Func([CashOutRequest], [IDL.Nat], []),
     'processInternalTransfer' : IDL.Func(
         [InternalTransferRequest],
         [IDL.Nat],
         [],
       ),
+    'processInternalTransferByPhone' : IDL.Func(
+        [InternalTransferRequestByPhone],
+        [IDL.Nat],
+        [],
+      ),
+    'resendAddMoneyOtp' : IDL.Func([IDL.Nat], [], []),
     'saveCallerPersonalAccount' : IDL.Func([PersonalAccount], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'startAddMoney' : IDL.Func([FundingRequest], [IDL.Nat], []),
     'updateConnection' : IDL.Func(
         [IDL.Nat, IDL.Text, PlatformType, IDL.Text, IDL.Text],
         [],
         [],
       ),
     'updatePaymentStatus' : IDL.Func([IDL.Nat, PaymentStatus], [], []),
+    'verifyAddMoney' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Nat], []),
   });
 };
 

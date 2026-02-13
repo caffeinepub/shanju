@@ -1,5 +1,4 @@
-import { RouterProvider, createRouter, createRoute, createRootRoute, redirect } from '@tanstack/react-router';
-import { useInternetIdentity } from './hooks/useInternetIdentity';
+import { RouterProvider, createRouter, createRoute, createRootRoute } from '@tanstack/react-router';
 import AppLayout from './components/layout/AppLayout';
 import SignInPage from './pages/SignInPage';
 import DashboardPage from './pages/DashboardPage';
@@ -9,9 +8,11 @@ import PaymentHistoryPage from './pages/PaymentHistoryPage';
 import IntegrationsPage from './pages/IntegrationsPage';
 import PersonalAccountPage from './pages/PersonalAccountPage';
 import PublicPaymentPage from './pages/PublicPaymentPage';
+import AdminPanelPage from './pages/AdminPanelPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
+import { useServiceWorker } from './hooks/useServiceWorker';
 
 const rootRoute = createRootRoute({
   component: AppLayout,
@@ -59,6 +60,12 @@ const personalAccountRoute = createRoute({
   component: PersonalAccountPage,
 });
 
+const adminPanelRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin',
+  component: AdminPanelPage,
+});
+
 const publicPaymentRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/pay/$id',
@@ -79,6 +86,7 @@ const routeTree = rootRoute.addChildren([
   paymentHistoryRoute,
   integrationsRoute,
   personalAccountRoute,
+  adminPanelRoute,
   publicPaymentRoute,
   notFoundRoute,
 ]);
@@ -91,11 +99,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+function AppWithServiceWorker() {
+  useServiceWorker();
+  
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <RouterProvider router={router} />
-      <Toaster />
+      <AppWithServiceWorker />
     </ThemeProvider>
   );
 }

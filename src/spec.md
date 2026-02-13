@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Require users to provide a Password and NID Number when saving a Personal Account profile.
+**Goal:** Make the Admin Panel installable as a focused PWA so Android “Add to Home Screen” launches directly into the admin experience and reliably supports deep links.
 
 **Planned changes:**
-- Update the backend PersonalAccount data model to include required fields for a user-provided password and NID number.
-- Update backend saveCallerPersonalAccount to reject saving when password or NID number is empty/blank.
-- Update the frontend Personal Account Profile form to add a masked Password input and a NID Number input (English labels/messages only).
-- Enforce client-side required validation for Password and NID Number, initialize both fields to empty strings by default, and update the existing Tax ID / NID field so NID Number is required (not shown as optional).
+- Update `frontend/public/manifest.webmanifest` to set `start_url` to `/admin` and add a manifest shortcut for the Admin Panel route using existing icons where appropriate.
+- Adjust the service worker behavior to support SPA navigation in standalone mode so routes like `/admin`, `/dashboard`, and `/pay/<id>` load reliably when opened from the home screen without breaking existing static asset/icon caching.
+- Update the Admin Panel > Install Guide tab copy (English only) to clearly explain installing via “Add to Home Screen/Install app” as the supported APK-like alternative for Android.
 
-**User-visible outcome:** On the Personal Account > Profile tab, users must enter both a Password and a NID Number to save their profile, and they will see inline English validation errors if either field is missing.
+**User-visible outcome:** Users can install the app from the Admin Panel on Android Chrome, launch directly into `/admin`, and open deep links (including `/dashboard` and `/pay/<id>`) in standalone mode without blank pages or navigation errors.

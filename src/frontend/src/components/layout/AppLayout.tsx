@@ -11,7 +11,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const isAuthenticated = !!identity && !identity.getPrincipal().isAnonymous();
 
-  const protectedPaths = ['/dashboard', '/create-payment', '/history', '/payment', '/integrations', '/personal-account'];
+  const protectedPaths = ['/dashboard', '/create-payment', '/history', '/payment', '/integrations', '/personal-account', '/admin'];
   const isProtectedRoute = protectedPaths.some((path) => location.pathname.startsWith(path));
 
   useEffect(() => {

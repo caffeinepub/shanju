@@ -1,21 +1,22 @@
-import Map "mo:core/Map"; 
-import Array "mo:core/Array"; 
-import Order "mo:core/Order"; 
-import Principal "mo:core/Principal"; 
-import Runtime "mo:core/Runtime"; 
-import Text "mo:core/Text"; 
-import Nat "mo:core/Nat"; 
-import Time "mo:core/Time"; 
-import Iter "mo:core/Iter"; 
-import Int "mo:core/Int"; 
-
-import Migration "migration";
-import MixinAuthorization "authorization/MixinAuthorization"; 
+import Map "mo:core/Map";
+import Array "mo:core/Array";
+import Order "mo:core/Order";
+import Principal "mo:core/Principal";
+import Runtime "mo:core/Runtime";
+import Text "mo:core/Text";
+import Nat "mo:core/Nat";
+import Time "mo:core/Time";
+import Iter "mo:core/Iter";
+import Char "mo:core/Char";
+import List "mo:core/List";
+import Nat32 "mo:core/Nat32";
+import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-(with migration = Migration.run)
+
+
 actor {
-  let accessControlState = AccessControl.initState(); 
+  let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
   public type UserProfile = {
@@ -39,6 +40,7 @@ actor {
   };
 
   public type Payment = {
+    id : Nat;
     payer : Principal;
     payee : Principal;
     amount : Nat;
@@ -151,6 +153,7 @@ actor {
 
   let userProfiles = Map.empty<Principal, UserProfile>();
   let personalAccounts = Map.empty<Principal, PersonalAccount>();
+  let phoneNumberToPrincipal = Map.empty<Text, Principal>();
   let payments = Map.empty<Nat, Payment>();
   let connections = Map.empty<Nat, PlatformConnection>();
   var nextPaymentId = 1;
@@ -159,6 +162,19 @@ actor {
   let walletBalances = Map.empty<Principal, Map.Map<Currency, Nat>>();
   let transactions = Map.empty<Nat, Transaction>();
   var nextTransactionId = 1;
+
+  // Add Money/OTP support
+  public type OTPData = {
+    referenceId : Nat;
+    owner : Principal;
+    code : Nat;
+    timestamp : Time.Time;
+    verified : Bool;
+    fundingRequest : ?FundingRequest;
+  };
+
+  let otps = Map.empty<Nat, OTPData>();
+  var nextReferenceId = 1;
 
   // --- User Profile ---
 
@@ -183,6 +199,18 @@ actor {
     userProfiles.add(caller, profile);
   };
 
+  func normalizePhoneNumber(phone : Text) : Text {
+    let chars = List.empty<Char>();
+    for (c in phone.chars()) {
+      let code = c.toNat32();
+      if (code >= 48 and code <= 57) {
+        chars.add(c);
+      };
+    };
+    let digits = chars.reverse();
+    Text.fromIter(digits.values());
+  };
+
   // --- Personal Account ---
 
   public query ({ caller }) func getCallerPersonalAccount() : async ?PersonalAccount {
@@ -203,7 +231,35 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create or update personal accounts");
     };
-    personalAccounts.add(caller, account);
+
+    let normalizedPhone = normalizePhoneNumber(account.phone);
+
+    if (normalizedPhone.size() == 0) {
+      Runtime.trap("Phone number cannot be empty");
+    };
+
+    switch (personalAccounts.get(caller)) {
+      case (?existingAccount) {
+        let oldNormalizedPhone = normalizePhoneNumber(existingAccount.phone);
+        if (oldNormalizedPhone != normalizedPhone) {
+          phoneNumberToPrincipal.remove(oldNormalizedPhone);
+        };
+      };
+      case (null) {};
+    };
+
+    switch (phoneNumberToPrincipal.get(normalizedPhone)) {
+      case (?existingPrincipal) {
+        if (existingPrincipal != caller) {
+          Runtime.trap("Phone number already in use by another account");
+        };
+      };
+      case (null) {};
+    };
+
+    personalAccounts.add(caller, { account with phone = normalizedPhone });
+
+    phoneNumberToPrincipal.add(normalizedPhone, caller);
   };
 
   // --- Payments ---
@@ -221,6 +277,7 @@ actor {
     let id = nextPaymentId;
     nextPaymentId += 1;
     let payment : Payment = {
+      id;
       payer = caller;
       payee;
       amount;
@@ -230,6 +287,39 @@ actor {
     };
     payments.add(id, payment);
     id;
+  };
+
+  public shared ({ caller }) func createPaymentByPhone(
+    phoneNumber : Text,
+    amount : Nat,
+    currency : Text,
+    description : Text,
+  ) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create payments");
+    };
+
+    let normalizedPhone = normalizePhoneNumber(phoneNumber);
+
+    let payee = switch (phoneNumberToPrincipal.get(normalizedPhone)) {
+      case (?p) { p };
+      case (null) { Runtime.trap("Payee with phone number " # normalizedPhone # " does not exist") };
+    };
+
+    let id = nextPaymentId;
+    nextPaymentId += 1;
+    let payment : Payment = {
+      id;
+      payer = caller;
+      payee;
+      amount;
+      currency;
+      description;
+      status = #pending;
+    };
+    payments.add(id, payment);
+
+    Runtime.trap("createPaymentByPhone is not yet implemented, payment id " # id.toText() # " was created, but payment by phone does not work yet");
   };
 
   public query ({ caller }) func getPayment(id : Nat) : async Payment {
@@ -279,6 +369,72 @@ actor {
     payments.values().toArray().sort();
   };
 
+  // --- Admin APIs ---
+
+  public query ({ caller }) func getUserAccount(user : Principal) : async {
+    profile : ?UserProfile;
+    personalAccount : ?PersonalAccount;
+    walletBalances : ?[WalletBalance];
+    transactions : ?[Transaction];
+  } {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can access user data");
+    };
+
+    // Retrieve wallet balances as array
+    let userWallet = switch (walletBalances.get(user)) {
+      case (null) { ?[] };
+      case (?balances) {
+        ?balances.toArray().map(
+          func((currency, amount)) {
+            { currency; amount };
+          }
+        );
+      };
+    };
+
+    let userData = {
+      profile = userProfiles.get(user);
+      personalAccount = personalAccounts.get(user);
+      walletBalances = userWallet;
+      transactions = ?transactions.values().filter(
+        func(tx) {
+          tx.owner == user;
+        }
+      ).toArray();
+    };
+    userData;
+  };
+
+  public query ({ caller }) func listAllUsers() : async [{
+    principal : Principal;
+    profile : ?UserProfile;
+    personalAccount : ?PersonalAccount;
+  }] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can list all users");
+    };
+
+    let profiles = userProfiles.entries().toArray();
+    let accounts = personalAccounts.entries().toArray();
+
+    let users = profiles.map(
+      func((user, profile)) {
+        let account = switch (personalAccounts.get(user)) {
+          case (?account) { ?account };
+          case (null) { null };
+        };
+        {
+          principal = user;
+          profile = ?profile;
+          personalAccount = account;
+        };
+      }
+    );
+
+    users;
+  };
+
   // --- Wallet Ledger Functionality ---
 
   public type InternalTransferRequest = {
@@ -292,10 +448,23 @@ actor {
     amount : Nat;
     currency : Currency;
     method : {
-      #visa;
-      #mastercard;
+      #visa : {
+        card_number : Text;
+        card_holder : Text;
+        expiry : Text;
+        cvv : Text;
+      };
+      #mastercard : {
+        card_number : Text;
+        card_holder : Text;
+        expiry : Text;
+        cvv : Text;
+      };
       #bank_account : {
         account_number : Text;
+        account_holder : Text;
+        bank_name : Text;
+        routing_number : Text;
       };
     };
     reference : ?Text;
@@ -354,7 +523,6 @@ actor {
     nextTransactionId += 1;
   };
 
-  // Query wallet balance for authenticated caller
   public query ({ caller }) func getCallerWalletBalance() : async [WalletBalance] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view wallet balance");
@@ -372,7 +540,6 @@ actor {
     };
   };
 
-  // Query transaction history for authenticated caller
   public query ({ caller }) func getCallerTransactionHistory() : async [Transaction] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view transaction history");
@@ -385,7 +552,6 @@ actor {
     ).toArray();
   };
 
-  // Admin function to view any user's wallet balance
   public query ({ caller }) func getWalletBalance(user : Principal) : async [WalletBalance] {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Can only view your own wallet balance");
@@ -403,7 +569,6 @@ actor {
     };
   };
 
-  // Admin function to view any user's transaction history
   public query ({ caller }) func getTransactionHistory(user : Principal) : async [Transaction] {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Can only view your own transaction history");
@@ -429,14 +594,11 @@ actor {
       Runtime.trap("Insufficient funds for currency");
     };
 
-    // Deduct from sender
     setBalance(caller, transfer.currency, senderBalance - transfer.amount);
 
-    // Credit recipient
     let recipientBalance = getBalance(transfer.recipient, transfer.currency);
     setBalance(transfer.recipient, transfer.currency, recipientBalance + transfer.amount);
 
-    // Record sender transaction
     let senderTxId = nextTransactionId;
     let senderTransaction : Transaction = {
       id = senderTxId;
@@ -452,7 +614,6 @@ actor {
     };
     recordTransaction(senderTransaction);
 
-    // Record recipient transaction
     let recipientTransaction : Transaction = {
       id = nextTransactionId;
       owner = transfer.recipient;
@@ -470,7 +631,77 @@ actor {
     senderTxId;
   };
 
-  public shared ({ caller }) func processAddMoney(request : FundingRequest) : async Nat {
+  public type InternalTransferRequestByPhone = {
+    phoneNumber : Text;
+    amount : Nat;
+    currency : Currency;
+    reference : ?Text;
+  };
+
+  public shared ({ caller }) func processInternalTransferByPhone(transfer : InternalTransferRequestByPhone) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can transfer");
+    };
+    if (transfer.amount == 0) {
+      Runtime.trap("Invalid transfer amount. Must be greater than 0");
+    };
+
+    let normalizedPhone = normalizePhoneNumber(transfer.phoneNumber);
+    let recipient = switch (phoneNumberToPrincipal.get(normalizedPhone)) {
+      case (?recipient) { recipient };
+      case (null) { Runtime.trap("Recipient with phone number " # normalizedPhone # " does not exist") };
+    };
+
+    if (recipient == caller) {
+      Runtime.trap("Cannot transfer to yourself");
+    };
+
+    let senderBalance = getBalance(caller, transfer.currency);
+    if (senderBalance < transfer.amount) {
+      Runtime.trap("Insufficient funds for currency");
+    };
+
+    setBalance(caller, transfer.currency, senderBalance - transfer.amount);
+
+    let recipientBalance = getBalance(recipient, transfer.currency);
+    setBalance(recipient, transfer.currency, recipientBalance + transfer.amount);
+
+    let senderTxId = nextTransactionId;
+    let senderTransaction : Transaction = {
+      id = senderTxId;
+      owner = caller;
+      amount = transfer.amount;
+      currency = transfer.currency;
+      transactionType = #transfer_out;
+      status = #completed;
+      timestamp = Time.now();
+      reference = transfer.reference;
+      sender = ?caller;
+      receiver = ?recipient;
+    };
+    recordTransaction(senderTransaction);
+
+    let recipientTransaction : Transaction = {
+      id = nextTransactionId;
+      owner = recipient;
+      amount = transfer.amount;
+      currency = transfer.currency;
+      transactionType = #transfer_in;
+      status = #completed;
+      timestamp = Time.now();
+      reference = transfer.reference;
+      sender = ?caller;
+      receiver = ?recipient;
+    };
+    recordTransaction(recipientTransaction);
+
+    senderTxId;
+  };
+
+  // Add Money/OTP Functions
+
+  // 1. Start Add Money (trigger OTP challenge)
+  public shared ({ caller }) func startAddMoney(request : FundingRequest) : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can add money");
     };
@@ -478,25 +709,168 @@ actor {
       Runtime.trap("Invalid add money amount. Must be greater than 0");
     };
 
-    let currentBalance = getBalance(caller, request.currency);
-    setBalance(caller, request.currency, currentBalance + request.amount);
+    // Validate required proof fields based on funding method
+    switch (request.method) {
+      case (#visa({ card_number; card_holder; expiry; cvv })) {
+        if (card_number.size() == 0) {
+          Runtime.trap("Card number is required for Visa funding");
+        };
+        if (card_holder.size() == 0) {
+          Runtime.trap("Card holder name is required for Visa funding");
+        };
+        if (expiry.size() == 0) {
+          Runtime.trap("Card expiry date is required for Visa funding");
+        };
+        if (cvv.size() == 0) {
+          Runtime.trap("CVV is required for Visa funding");
+        };
+      };
+      case (#mastercard({ card_number; card_holder; expiry; cvv })) {
+        if (card_number.size() == 0) {
+          Runtime.trap("Card number is required for Mastercard funding");
+        };
+        if (card_holder.size() == 0) {
+          Runtime.trap("Card holder name is required for Mastercard funding");
+        };
+        if (expiry.size() == 0) {
+          Runtime.trap("Card expiry date is required for Mastercard funding");
+        };
+        if (cvv.size() == 0) {
+          Runtime.trap("CVV is required for Mastercard funding");
+        };
+      };
+      case (#bank_account({ account_number; account_holder; bank_name; routing_number })) {
+        if (account_number.size() == 0) {
+          Runtime.trap("Bank account number is required for bank account funding");
+        };
+        if (account_holder.size() == 0) {
+          Runtime.trap("Account holder name is required for bank account funding");
+        };
+        if (bank_name.size() == 0) {
+          Runtime.trap("Bank name is required for bank account funding");
+        };
+        if (routing_number.size() == 0) {
+          Runtime.trap("Routing number is required for bank account funding");
+        };
+      };
+    };
 
+    // Create OTP challenge entry (do NOT credit balance yet)
+    let referenceId = nextReferenceId;
+    nextReferenceId += 1;
+
+    let otpData : OTPData = {
+      referenceId;
+      owner = caller;
+      code = 123456 % 999999;
+      timestamp = Time.now();
+      verified = false;
+      fundingRequest = ?request;
+    };
+
+    otps.add(referenceId, otpData);
+
+    referenceId;
+  };
+
+  // 2. Verify Add Money via OTP
+  public shared ({ caller }) func verifyAddMoney(referenceId : Nat, otp : Nat) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can verify add money");
+    };
+
+    // Lookup OTP record
+    let otpData = switch (otps.get(referenceId)) {
+      case (null) { Runtime.trap("Invalid transaction reference or expired OTP") };
+      case (?otpData) { otpData };
+    };
+
+    // AUTHORIZATION: Verify caller owns this funding request
+    if (caller != otpData.owner) {
+      Runtime.trap("Unauthorized: Can only verify your own funding requests");
+    };
+
+    // Validate OTP (6 digits)
+    if (otp != otpData.code) {
+      Runtime.trap("Invalid OTP code");
+    };
+
+    let fundingRequest = switch (otpData.fundingRequest) {
+      case (null) {
+        Runtime.trap("Funding request missing - cannot process transaction");
+      };
+      case (?request) { request };
+    };
+
+    // Verify OTP record is not already used
+    if (otpData.verified) {
+      Runtime.trap("Add money attempt already completed - duplicate attempt");
+    };
+
+    // Perform final balance update and record completed transaction
     let txId = nextTransactionId;
+
     let transaction : Transaction = {
       id = txId;
       owner = caller;
-      amount = request.amount;
-      currency = request.currency;
+      amount = fundingRequest.amount;
+      currency = fundingRequest.currency;
       transactionType = #funding;
       status = #completed;
       timestamp = Time.now();
-      reference = request.reference;
+      reference = fundingRequest.reference;
       sender = ?caller;
       receiver = ?caller;
     };
     recordTransaction(transaction);
 
+    let currentBalance = getBalance(caller, fundingRequest.currency);
+    setBalance(caller, fundingRequest.currency, currentBalance + fundingRequest.amount);
+
+    // Mark OTP as verified & clear transaction reference
+    otps.add(referenceId, {
+      otpData with
+      verified = true;
+      code = 0;
+      fundingRequest = null;
+    });
+
     txId;
+  };
+
+  // 3. Resend/Regenerate OTP
+  public shared ({ caller }) func resendAddMoneyOtp(referenceId : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can resend OTP");
+    };
+
+    // Lookup OTP record
+    let otpData = switch (otps.get(referenceId)) {
+      case (null) { Runtime.trap("Invalid transaction reference or expired OTP") };
+      case (?otpData) { otpData };
+    };
+
+    // AUTHORIZATION: Verify caller owns this funding request
+    if (caller != otpData.owner) {
+      Runtime.trap("Unauthorized: Can only resend OTP for your own funding requests");
+    };
+
+    let _ = switch (otpData.fundingRequest) {
+      case (null) {
+        Runtime.trap("Funding request missing - cannot generate OTP");
+      };
+      case (?request) { request };
+    };
+
+    let code = 123456 % 999999;
+
+    // Update record with new OTP
+    otps.add(referenceId, {
+      otpData with
+      code;
+      timestamp = Time.now();
+      verified = false;
+    });
   };
 
   public shared ({ caller }) func processCashOut(request : CashOutRequest) : async Nat {
@@ -609,3 +983,4 @@ actor {
     connections.remove(id);
   };
 };
+
